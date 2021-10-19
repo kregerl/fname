@@ -8,8 +8,9 @@ fname [FILENAME] [OPTIONS]
 .SH DESCRIPTION
 append or prepend text to the specified file. 
 .SH OPTIONS
--a append text before the . in the file extension
-The nuseradd does not take any options. However, you can supply username.
+-a append text before the `.` in the file extension
+-p prepend text before the file name
+-e must be used with [-a] and changes the append location to the end of the file
 .SH SEE ALSO
 useradd(8), passwd(5), nuseradd.debian(8) 
 .SH BUGS

@@ -179,16 +179,26 @@ str_pair_t str_split(char* str, char delimeter) {
 			last_delim_idx = i;
 		}
 	}
-	result.first = malloc((len - last_delim_idx + 1) * sizeof(char));
-	strncpy(result.first, str, last_delim_idx);
-	result.first[last_delim_idx] = '\0';
-
-	result.second = malloc((last_delim_idx + 1) * sizeof(char));
-	for (int i = 0; i < last_delim_idx; i++) {
-		result.second[i] = str[last_delim_idx + i];
-	}
-	result.second[last_delim_idx] = '\0';
+	if (last_delim_idx != -1) {
+		result.first = malloc((len - last_delim_idx + 1) * sizeof(char));
+		strncpy(result.first, str, last_delim_idx);
+		result.first[last_delim_idx] = '\0';
+	} else {
+		result.first = malloc((len + 1) * sizeof(char));
+		strcpy(result.first, str);
+		result.first[len] = '\0';
+	}	
 	
+	if (last_delim_idx != -1) {
+		result.second = malloc((last_delim_idx + 1) * sizeof(char));
+		for (int i = 0; i < last_delim_idx; i++) {
+			result.second[i] = str[last_delim_idx + i];
+		}
+		result.second[last_delim_idx] = '\0';
+	} else {
+		result.second = NULL;
+	}
+
 	return result;
 }
 
@@ -213,7 +223,6 @@ str_pair_t get_filename_from_path(char* path) {
 	result.second = last_token;
 	return result;
 }
-
 
 
 
