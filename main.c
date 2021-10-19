@@ -11,6 +11,7 @@ typedef struct {
 } str_pair_t;
 
 str_pair_t str_split(char* str, char delimeter);
+str_pair_t get_filename_from_path(char* path);
 
 int main(int argc, char** argv) {
 	
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
 	char usage[] = "usage: %s filename [-a append_text] [-p prepend_text] -e\n";
 
 
-	while ((option = getopt(argc, argv, "a:p:e")) != -1) {
+	while ((option = getopt(argc, argv, "a:p:eh")) != -1) {
 		switch(option) {
 			case 'a': {	
 				a_flag = true;
@@ -40,6 +41,10 @@ int main(int argc, char** argv) {
 			case 'e': {
 				e_flag = true;
 			} break;
+			case 'h': {
+				printf(usage, argv[0]);
+				exit(0);
+			} break;
 			case '?': {
 				if (optopt == 'a' || optopt == 'p') {
 					fprintf(stderr, "%s: missing string after operand '-%c'\n", argv[0], optopt);
@@ -48,8 +53,8 @@ int main(int argc, char** argv) {
 				} else {
 					fprintf(stderr, "%s: unknown argument: %c\n", argv[0], optopt);
 					printf(usage, argv[0]);
+					exit(1);
 				}
-				printf("Here");
 			} break;
 		}
 	}
@@ -91,8 +96,13 @@ int main(int argc, char** argv) {
 	}
 
 	for (int i = 0; i < filenames_length - 1; i++) {
-		str_pair_t result = str_split(filenames[i], '.');
+		str_pair_t name = get_filename_from_path(filenames[i]);
+		str_pair_t result = str_split(name.second, '.');
 		size_t total_size = 1;
+		
+		if (name.first) {
+			total_size += strlen(name.first);
+		}
 		if (result.first) {
 			total_size += strlen(result.first);
 		}
@@ -109,6 +119,11 @@ int main(int argc, char** argv) {
 		char* buffer = malloc(total_size * sizeof(char));
 		memset(buffer, 0, total_size);
 
+		if (name.first) {
+			strcat(buffer, name.first);
+			free(name.first);
+		}
+
 		if (p_flag) {
 			strcat(buffer, prepend_text);
 		}
@@ -119,6 +134,7 @@ int main(int argc, char** argv) {
 		if (e_flag) {
 			if (result.second) {
 				strcat(buffer, result.second);
+				free(result.second);
 			}
 			if (a_flag) {
 				strcat(buffer, append_text);
@@ -133,11 +149,13 @@ int main(int argc, char** argv) {
 			}
 
 		}
-
+		if (name.second) {
+			free(name.second);
+		}
 		int ret = rename(filenames[i], buffer);
 
 		if (ret == 0) {
-			printf("Buffer: %s\n", buffer);
+			printf("Renamed file <%s> to: %s\n", filenames[i],  buffer);
 		} else {
 			printf("Error: Could not rename file");
 		}
@@ -174,6 +192,27 @@ str_pair_t str_split(char* str, char delimeter) {
 	return result;
 }
 
+str_pair_t get_filename_from_path(char* path) {
+	char* path_copy = malloc((strlen(path) + 1) *  sizeof(char));
+	strcpy(path_copy, path);
+	path_copy[strlen(path)] = '\0';
+
+	str_pair_t result;
+	result.first = NULL;
+	result.second = NULL;
+	char* token = strtok(path_copy, "/");
+	char* last_token = token;
+	while (token != NULL) {
+		last_token = token;
+		token = strtok(NULL, "/");
+	}
+	int path_len = strlen(path) - strlen(last_token);
+	result.first = calloc(path_len + 1, sizeof(char));
+	result.first = strncpy(result.first, path, strlen(path) - strlen(last_token));
+	result.first[path_len] = '\0';
+	result.second = last_token;
+	return result;
+}
 
 
 
